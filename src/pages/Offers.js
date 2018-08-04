@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
-import { TextInput, View, Button, StyleSheet, Text, ToastAndroid, AsyncStorage, FlatList, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Button, StyleSheet, Text, ToastAndroid, FlatList, Dimensions, Image, RefreshControl } from 'react-native';
 import CardView from 'react-native-cardview';
+import GestureRecognizer, { swipeDirections } from 'react-native-swipe-gestures';
 
+const baseUrl = "http://192.168.0.100:8000/";
 
 export default class Offers extends Component {
 
@@ -13,19 +15,20 @@ export default class Offers extends Component {
 
       message: "",
       resp: "",
-      products: []
+      products: [],
+
     };
   }
 
-  componentDidMount(){
-    this.refresh();
+  componentDidMount() {
+      this.refresh();
   }
 
   renderItem = ({ item, index }) => {
 
     return (
 
-      <View style={styles.item}>
+      <View>
         <CardView
           cardElevation={2}
           cardMaxElevation={2}
@@ -33,50 +36,57 @@ export default class Offers extends Component {
           height={130}
           marginTop={2}>
 
+          <Image
+          style={{width: 66, height: 58}}
+          source={{uri: baseUrl + "images/" + item.image}} 
+        />
+
+         
+
           <Text>
             Articolo:
-            <Text style={{fontWeight: 'bold'}}>
-            {" " + item.name}
+            <Text style={{ fontWeight: 'bold' }}>
+              {" " + item.name}
             </Text>
+          </Text>
+
+          <Text>
+            Prezzo:
+            <Text style={{ fontWeight: 'bold' }}>
+              {" " + item.price} €
+          </Text>
+          </Text>
+
+
+          <Text>
+            Descrizione:
+            <Text style={{ fontWeight: 'bold' }}>
+              {" " + item.description}
             </Text>
-
-          <Text>
-          Prezzo: 
-            <Text style={{fontWeight: 'bold'}}>
-            {" " + item.price} €
-          </Text>
           </Text>
 
 
           <Text>
-          Descrizione: 
-            <Text style={{fontWeight: 'bold'}}>
-            {" " + item.description}
-          </Text>
-          </Text>
-
-
-          <Text>
-          Quantità: 
-            <Text style={{fontWeight: 'bold'}}>
-            {" " + item.quantity}
-          </Text>
+            Quantità:
+            <Text style={{ fontWeight: 'bold' }}>
+              {" " + item.quantity}
+            </Text>
           </Text>
 
 
           <Text>
-          Link: 
-            <Text style={{fontWeight: 'bold'}}>
-            {" " + item.link}
-          </Text>
+            Link:
+            <Text style={{ fontWeight: 'bold' }}>
+              {" " + item.link}
+            </Text>
           </Text>
 
 
           <Text>
-          Inserzionista: 
-            <Text style={{fontWeight: 'bold'}}>
-            {" " + item.user}
-          </Text>
+            Inserzionista:
+            <Text style={{ fontWeight: 'bold' }}>
+              {" " + item.user}
+            </Text>
           </Text>
 
         </CardView>
@@ -87,6 +97,8 @@ export default class Offers extends Component {
 
     );
   }
+
+
 
   render() {
 
@@ -99,26 +111,29 @@ export default class Offers extends Component {
           <FlatList
             data={this.state.products}
             renderItem={this.renderItem}
-            height={Dimensions.get('window').height-115}
+            minHeight={Dimensions.get('window').height}
+            refreshControl={
+              <RefreshControl
+                refreshing={false}
+                onEndReachedThreshold={0.5}
+                onRefresh={() => this.refresh()}
+              />
+            }
+
+
 
           />
+
         </View>
-
-        <Button style={styles.button}
-          onPress={() => this.refresh()}
-          title="Aggiorna"
-          color="#841584"
-        />
-
       </View>
     );
   }
 
 
-  refresh() {
-    console.log("login")
 
-    return fetch('http://192.168.42.17:8000/api/home', {
+  refresh() {
+
+    return fetch(baseUrl + "api/home", {
 
       method: 'GET',
       headers: {
@@ -153,9 +168,29 @@ export default class Offers extends Component {
           response.json()
             .then((responseJson) => {
 
-              this.setState({ products: responseJson.products });
-              console.log(this.state.products)
+              if(responseJson.products.length <= 0){
 
+                ToastAndroid.showWithGravity(
+                  "Nessuna offerta disponibile",
+                  ToastAndroid.LONG,
+                  ToastAndroid.CENTER
+                );
+
+              } else {
+
+              var list = responseJson.products;
+
+              for(let i = 0; i < list.length; i++){
+
+                if(list[i].image == "null"){
+                  list[i].image = "noimg.jpg";
+                }
+
+              }
+          
+              this.setState({ products: list });
+              console.log(this.state.products)
+            } 
 
 
             })
