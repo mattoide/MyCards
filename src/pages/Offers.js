@@ -3,7 +3,7 @@ import { View, Button, StyleSheet, Text, ToastAndroid, FlatList, Dimensions, Ima
 import CardView from 'react-native-cardview';
 import GestureRecognizer, { swipeDirections } from 'react-native-swipe-gestures';
 
-const baseUrl = "http://192.168.0.100:8000/";
+const baseUrl = "http://192.168.0.101:8000/";
 
 export default class Offers extends Component {
 
